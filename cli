@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+
+readonly DESCRIPTION="Cli takes a json file as input."
+readonly PROGNAME=$(basename $0)
+readonly USAGE="Usage: $PROGNAME INPUT.json"
+readonly NUM_REQUIRED_ARGS="1"
+readonly NUM_ARGS="$#"
+readonly ARGS="$@"
+readonly DEPENDENCIES="jq"
+
+set -e # exit if a command returns non-zero
+
+main() {
+	check_help
+	check_dependencies
+	check_args
+
+	local input=${ARGS[0]}
+
+	local foo=$(jq -r .foo $input)
+	local bar=$(jq -r .bar $input)
+	local baz=$(jq -r .baz $input)
+
+	echo running main...
+	
+	echo using args:
+	echo foo is $foo
+	echo bar is $bar
+	echo baz is $baz
+}
+
+generate_input_file() {
+	cat <<-'INPUT'
+	{
+	"foo": "cats",
+	"bar": "dogs",
+	"baz": "mice"
+	}
+	INPUT
+}
+
+check_help() {
+	if [[ ${ARGS[0]} =~ '-h' ]]; then
+		cat <<-BANNER >&2
+		$DESCRIPTION
+		$USAGE
+		Input file skeleton:
+		BANNER
+		generate_input_file
+		exit 0
+	fi
+}
+
+check_dependencies() {
+	for command in ${DEPENDENCIES[@]}; do
+		command -V $command 1> /dev/null
+	done
+}
+
+check_args() {
+	if [[ $NUM_ARGS != $NUM_REQUIRED_ARGS ]]; then
+		echo "error: Invalid arguments!" >&2
+		echo $USAGE >&2
+		exit 1
+	fi	
+}
+
+main
